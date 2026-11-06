@@ -140,8 +140,14 @@ def send(i):
 
     try:
         reply = ai_reply(history)
+    except requests.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else "unknown"
+        body = exc.response.text[:1500] if exc.response is not None else str(exc)
+        app.logger.error("Groq API HTTP error %s: %s", status, body)
+        reply = "Groq API error (HTTP " + str(status) + "). Please ask the app administrator to check the Render logs."
     except Exception:
-        reply = "Sorry, I couldn't reach the AI service just now. Please check the Groq API configuration and try again."
+        app.logger.exception("Unexpected AI service connection error")
+        reply = "AI connection error. Please ask the app administrator to check the Render logs."
 
     c.execute("INSERT INTO messages(chat_id,role,content) VALUES(?,?,?)", (i, "assistant", reply))
     count = c.execute("SELECT COUNT(*) n FROM messages WHERE chat_id=?", (i,)).fetchone()["n"]
