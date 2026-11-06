@@ -40,6 +40,14 @@ def home():
     return render_template("index.html")
 
 
+@app.get("/sw.js")
+def service_worker():
+    response = Response(app.send_static_file("sw.js"), mimetype="application/javascript")
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 @app.get("/api/chats")
 def chats():
     c = db()
